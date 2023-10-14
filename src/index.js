@@ -63,14 +63,14 @@ async function handleRequest(request) {
       });
 
       return new Response(JSON.stringify(result), {
-        headers: { "Content-Type": "application/json" },
-        status: 200,
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        status: 201,
       });
     } catch (error) {
       console.error(error);
 
       return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json; charset=utf-8" },
         status: 500,
       });
     }
@@ -109,14 +109,14 @@ async function handleRequest(request) {
       });
 
       return new Response(JSON.stringify(result), {
-        headers: { "Content-Type": "application/json" },
-        status: 200,
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        status: 201,
       });
     } catch (error) {
       console.error(error);
 
       return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json; charset=utf-8" },
         status: 500,
       });
     }
