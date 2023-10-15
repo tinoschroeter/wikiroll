@@ -2,7 +2,7 @@ addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
-const createUrl = (p, all, lang) => {
+const createUrl = (pageNumber, all, lang) => {
   let now;
 
   if (all) {
@@ -10,7 +10,7 @@ const createUrl = (p, all, lang) => {
   } else {
     now = new Date();
   }
-  const days = 24 * 60 * 60 * 1000 * p;
+  const days = 24 * 60 * 60 * 1000 * pageNumber;
   const date = new Date(now.getTime() - days);
 
   const currentYear = date.getFullYear().toString();
@@ -20,7 +20,7 @@ const createUrl = (p, all, lang) => {
   return `https://${lang}.wikipedia.org/api/rest_v1/feed/featured/${currentYear}/${currentMonth}/${currentDay}`;
 };
 
-async function handleRequest(request) {
+const handleRequest = async (request) => {
   const { pathname } = new URL(request.url);
   const parts = pathname.split("/").filter(Boolean);
 
@@ -40,9 +40,8 @@ async function handleRequest(request) {
   ) {
     const lang = parts[2];
     const page = parseInt(parts[3]);
-    const all = page === 0;
 
-    const url = createUrl(page, all, lang);
+    const url = createUrl(page, false, lang);
 
     try {
       const response = await fetch(url);
@@ -62,17 +61,30 @@ async function handleRequest(request) {
         return obj;
       });
 
+      await wikiroll.put(page.toString(), JSON.stringify(result));
       return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json; charset=utf-8" },
-        status: 201,
+        status: 200,
       });
     } catch (error) {
       console.error(error);
 
-      return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-        headers: { "Content-Type": "application/json; charset=utf-8" },
-        status: 500,
-      });
+      const cache = await wikiroll.get(page.toString());
+
+      if (cache !== null) {
+        return new Response(JSON.stringify(cache), {
+          headers: { "Content-Type": "application/json; charset=utf-8" },
+          status: 200,
+        });
+      } else {
+        return new Response(
+          JSON.stringify({ error: "Internal Server Error" }),
+          {
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+            status: 500,
+          }
+        );
+      }
     }
   } else if (
     parts.length === 5 &&
@@ -82,13 +94,8 @@ async function handleRequest(request) {
   ) {
     const lang = parts[3];
     let page = parseInt(parts[4]);
-    const all = page === 0;
 
-    if (isNaN(page)) {
-      page = 0;
-    }
-
-    const url = createUrl(page, all, lang);
+    const url = createUrl(page, true, lang);
 
     try {
       const response = await fetch(url);
@@ -108,17 +115,30 @@ async function handleRequest(request) {
         return obj;
       });
 
+      await wikiroll.put("all_" + page.toString(), JSON.stringify(result));
       return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json; charset=utf-8" },
-        status: 201,
+        status: 200,
       });
     } catch (error) {
       console.error(error);
 
-      return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-        headers: { "Content-Type": "application/json; charset=utf-8" },
-        status: 500,
-      });
+      const cache = await wikiroll.get("all_" + page.toString());
+
+      if (cache !== null) {
+        return new Response(JSON.stringify(cache), {
+          headers: { "Content-Type": "application/json; charset=utf-8" },
+          status: 200,
+        });
+      } else {
+        return new Response(
+          JSON.stringify({ error: "Internal Server Error" }),
+          {
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+            status: 500,
+          }
+        );
+      }
     }
   }
 
@@ -126,4 +146,4 @@ async function handleRequest(request) {
     status: 404,
     statusText: "Not Found",
   });
-}
+};
