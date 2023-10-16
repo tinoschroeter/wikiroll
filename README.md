@@ -1,6 +1,6 @@
 # Wikiroll backend
 
-[![app store](https://img.shields.io/badge/any_App-Store_Wikiroll-blue)](https://github.com/tinoschroeter/wikiroll#readme)
+[![app store](https://img.shields.io/badge/App-Store_Wikiroll-blue)](https://github.com/tinoschroeter/wikiroll#readme)
 
 wikiroll backend built with Cloudflare Worker.
 
