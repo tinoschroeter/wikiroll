@@ -24,15 +24,13 @@ const handleRequest = async (request) => {
   const { pathname } = new URL(request.url);
   const parts = pathname.split("/").filter(Boolean);
 
-  if (parts.length === 1) {
-    if (parts[0] === "api") {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: "https://en.wikipedia.org/api/rest_v1/#/Math",
-        },
-      });
-    }
+  if (parts.length === 0) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://en.wikipedia.org/api/rest_v1/#/Math",
+      },
+    });
   } else if (
     parts.length === 4 &&
     parts[0] === "api" &&
@@ -42,6 +40,15 @@ const handleRequest = async (request) => {
     const page = parseInt(parts[3]);
 
     const url = createUrl(page, false, lang);
+
+    const cache = await wikiroll.get(url);
+
+    if (cache !== null) {
+      return new Response(cache, {
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        status: 200,
+      });
+    }
 
     try {
       const response = await fetch(url);
@@ -61,7 +68,7 @@ const handleRequest = async (request) => {
         return obj;
       });
 
-      await wikiroll.put(page.toString(), JSON.stringify(result));
+      await wikiroll.put(url, JSON.stringify(result));
       return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json; charset=utf-8" },
         status: 200,
@@ -69,22 +76,10 @@ const handleRequest = async (request) => {
     } catch (error) {
       console.error(error);
 
-      const cache = await wikiroll.get(page.toString());
-
-      if (cache !== null) {
-        return new Response(JSON.stringify(cache), {
-          headers: { "Content-Type": "application/json; charset=utf-8" },
-          status: 200,
-        });
-      } else {
-        return new Response(
-          JSON.stringify({ error: "Internal Server Error" }),
-          {
-            headers: { "Content-Type": "application/json; charset=utf-8" },
-            status: 500,
-          }
-        );
-      }
+      return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        status: 500,
+      });
     }
   } else if (
     parts.length === 5 &&
@@ -97,6 +92,14 @@ const handleRequest = async (request) => {
 
     const url = createUrl(page, true, lang);
 
+    const cache = await wikiroll.get(url);
+
+    if (cache !== null) {
+      return new Response(cache, {
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        status: 200,
+      });
+    }
     try {
       const response = await fetch(url);
       const data = await response.json();
@@ -115,7 +118,7 @@ const handleRequest = async (request) => {
         return obj;
       });
 
-      await wikiroll.put("all_" + page.toString(), JSON.stringify(result));
+      await wikiroll.put(url, JSON.stringify(result));
       return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json; charset=utf-8" },
         status: 200,
@@ -123,22 +126,10 @@ const handleRequest = async (request) => {
     } catch (error) {
       console.error(error);
 
-      const cache = await wikiroll.get("all_" + page.toString());
-
-      if (cache !== null) {
-        return new Response(JSON.stringify(cache), {
-          headers: { "Content-Type": "application/json; charset=utf-8" },
-          status: 200,
-        });
-      } else {
-        return new Response(
-          JSON.stringify({ error: "Internal Server Error" }),
-          {
-            headers: { "Content-Type": "application/json; charset=utf-8" },
-            status: 500,
-          }
-        );
-      }
+      return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        status: 500,
+      });
     }
   }
 
