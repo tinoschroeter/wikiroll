@@ -20,6 +20,24 @@ const createUrl = (pageNumber, all, lang) => {
   return `https://${lang}.wikipedia.org/api/rest_v1/feed/featured/${currentYear}/${currentMonth}/${currentDay}`;
 };
 
+const massageDataToFitTheApp = (data) => {
+  const array = data.mostread.articles.filter((item) => item.originalimage);
+  const result = array.map((item) => {
+    const obj = {};
+    obj.title = item.normalizedtitle;
+    obj.image = item.originalimage.source;
+    obj.thumbnail = item.thumbnail.source.replace(/\d+px/g, "400px");
+    obj.description = item.description;
+    obj.date = item.view_history.reverse()[0].date;
+    obj.url = item.content_urls.desktop.page;
+    obj.txt = item.extract;
+
+    return obj;
+  });
+
+  return result;
+};
+
 const handleRequest = async (request) => {
   const { pathname } = new URL(request.url);
   const parts = pathname.split("/").filter(Boolean);
@@ -54,19 +72,7 @@ const handleRequest = async (request) => {
       const response = await fetch(url);
       const data = await response.json();
 
-      const array = data.mostread.articles.filter((item) => item.originalimage);
-      const result = array.map((item) => {
-        const obj = {};
-        obj.title = item.normalizedtitle;
-        obj.image = item.originalimage.source;
-        obj.thumbnail = item.thumbnail.source.replace(/\d+px/g, "400px");
-        obj.description = item.description;
-        obj.date = item.view_history.reverse()[0].date;
-        obj.url = item.content_urls.desktop.page;
-        obj.txt = item.extract;
-
-        return obj;
-      });
+      const result = massageDataToFitTheApp(data);
 
       await wikiroll.put(url, JSON.stringify(result));
       return new Response(JSON.stringify(result), {
@@ -104,19 +110,7 @@ const handleRequest = async (request) => {
       const response = await fetch(url);
       const data = await response.json();
 
-      const array = data.mostread.articles.filter((item) => item.originalimage);
-      const result = array.map((item) => {
-        const obj = {};
-        obj.title = item.normalizedtitle;
-        obj.image = item.originalimage.source;
-        obj.thumbnail = item.thumbnail.source.replace(/\d+px/g, "400px");
-        obj.description = item.description;
-        obj.date = item.view_history.reverse()[0].date;
-        obj.url = item.content_urls.desktop.page;
-        obj.txt = item.extract;
-
-        return obj;
-      });
+      const result = massageDataToFitTheApp(data);
 
       await wikiroll.put(url, JSON.stringify(result));
       return new Response(JSON.stringify(result), {
