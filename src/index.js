@@ -17,7 +17,12 @@ const createUrl = (pageNumber, all, lang) => {
   const currentMonth = (date.getMonth() + 1).toString().padStart(2, "0");
   const currentDay = date.getDate().toString().padStart(2, "0");
 
-  return `https://${lang}.wikipedia.org/api/rest_v1/feed/featured/${currentYear}/${currentMonth}/${currentDay}`;
+  return {
+    url: `https://${lang}.wikipedia.org/api/rest_v1/feed/featured/${currentYear}/${currentMonth}/${currentDay}`,
+    year: currentYear,
+    month: currentMonth,
+    day: currentDay,
+  };
 };
 
 const massageDataToFitTheApp = (data) => {
@@ -57,7 +62,7 @@ const handleRequest = async (request) => {
     const lang = parts[2];
     const page = parseInt(parts[3]);
 
-    const url = createUrl(page, false, lang);
+    const { url, year, month, day } = createUrl(page, false, lang);
 
     const cache = await wikiroll.get(url);
 
@@ -74,7 +79,10 @@ const handleRequest = async (request) => {
 
       const result = massageDataToFitTheApp(data);
 
-      await wikiroll.put(url, JSON.stringify(result));
+      if (result[0].date === `${year}-${month}-${day - 1}Z`) {
+        await wikiroll.put(url, JSON.stringify(result));
+      }
+
       return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json; charset=utf-8" },
         status: 200,
@@ -96,7 +104,7 @@ const handleRequest = async (request) => {
     const lang = parts[3];
     let page = parseInt(parts[4]);
 
-    const url = createUrl(page, true, lang);
+    const { url, year, month, day } = createUrl(page, true, lang);
 
     const cache = await wikiroll.get(url);
 
@@ -112,7 +120,10 @@ const handleRequest = async (request) => {
 
       const result = massageDataToFitTheApp(data);
 
-      await wikiroll.put(url, JSON.stringify(result));
+      if (result[0].date === `${year}-${month}-${day - 1}Z`) {
+        await wikiroll.put(url, JSON.stringify(result));
+      }
+
       return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json; charset=utf-8" },
         status: 200,
