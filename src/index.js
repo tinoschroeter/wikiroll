@@ -22,7 +22,7 @@ const massageDataToFitTheApp = (data) => {
     .map((item) => ({
       title: item.normalizedtitle,
       image: item.originalimage.source,
-      thumbnail: item.thumbnail.source.replace(/\d+px/g, "400px"),
+      thumbnail: item.thumbnail.source.replace(/\d+px/g, "550px"),
       description: item.description,
       date: item.view_history[item.view_history.length - 1].date,
       url: item.content_urls.desktop.page,

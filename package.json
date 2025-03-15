@@ -1,6 +1,6 @@
 {
   "name": "wikiroll",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "scripts": {
     "deploy": "wrangler deploy",
@@ -8,6 +8,6 @@
   },
   "devDependencies": {
     "itty-router": "^3.0.12",
-    "wrangler": "^3.22.1"
+    "wrangler": "^4.0.0"
   }
 }
