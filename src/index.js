@@ -16,6 +16,23 @@ const createUrl = (pageNumber, all, lang) => {
   return { url, year: currentYear, month: currentMonth, day: currentDay };
 };
 
+const parseResponseData = async (response) => {
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
+  } else {
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      throw new Error(
+        `Response is not valid JSON. Content-Type: ${contentType}, Content: ${text.substring(0, 200)}...`,
+      );
+    }
+  }
+};
+
 const massageDataToFitTheApp = (data) => {
   return data.mostread.articles
     .filter((item) => item.originalimage)
@@ -33,6 +50,12 @@ const massageDataToFitTheApp = (data) => {
 const handleRequest = async (request) => {
   const { pathname } = new URL(request.url);
   const parts = pathname.split("/").filter(Boolean);
+
+  const headers = {
+    headers: {
+      "User-Agent": "wikiroll/1.0 (tino.schroeter@gmail.com)",
+    },
+  };
 
   if (parts.length === 0) {
     return new Response(null, {
@@ -61,8 +84,8 @@ const handleRequest = async (request) => {
     }
 
     try {
-      const response = await fetch(url);
-      const data = await response.json();
+      const response = await fetch(url, headers);
+      const data = await parseResponseData(response);
 
       const result = massageDataToFitTheApp(data);
 
@@ -102,8 +125,8 @@ const handleRequest = async (request) => {
       });
     }
     try {
-      const response = await fetch(url);
-      const data = await response.json();
+      const response = await fetch(url, headers);
+      const data = await parseResponseData(response);
 
       const result = massageDataToFitTheApp(data);
 
